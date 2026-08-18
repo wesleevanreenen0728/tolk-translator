@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tõlk">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0A2A4D">
+<title>Tõlk — EN · ET Field Translator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F6F2;
+    --paper:#FFFFFF;
+    --ink:#14171C;
+    --ink-soft:#5B6270;
+    --blue:#0056A6;
+    --blue-deep:#0A2A4D;
+    --line:#DBDFE3;
+    --gold:#E2A83B;
+    --err:#B3432B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(0,86,166,0.06), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+    min-height:100%;
+  }
+  .app{max-width:480px;margin:0 auto;padding:0 18px 40px;}
+
+  /* ---- Topbar ---- */
+  .topbar{
+    padding:22px 4px 16px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    margin-bottom:18px;
+  }
+  .brand-mark{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:0.01em;
+    color:var(--blue-deep);
+    display:block;
+  }
+  .brand-sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.12em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+  }
+  .flag-chip{
+    width:34px;height:34px;border-radius:50%;
+    background:conic-gradient(from 180deg, #0056A6 0 33%, #14171C 33% 66%, #FFFFFF 66% 100%);
+    border:1px solid var(--line);
+    flex-shrink:0;
+  }
+
+  /* ---- Segmented mode switch ---- */
+  .segmented{
+    display:flex;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:4px;
+    margin-bottom:20px;
+    gap:4px;
+  }
+  .segmented button{
+    flex:1;
+    border:none;background:transparent;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:11px 0;
+    border-radius:10px;
+    color:var(--ink-soft);
+    font-weight:600;
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease;
+  }
+  .segmented button.active{
+    background:var(--blue-deep);
+    color:#fff;
+  }
+
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---- Language row (stamp style) ---- */
+  .lang-row{
+    display:flex;align-items:center;justify-content:center;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .lang-chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;font-weight:600;letter-spacing:0.06em;
+    border:1.5px solid var(--blue-deep);
+    color:var(--blue-deep);
+    padding:9px 16px;
+    border-radius:8px;
+    background:var(--paper);
+    min-width:118px;
+    text-align:center;
+    position:relative;
+  }
+  .lang-chip::before{
+    content:"";
+    position:absolute;inset:3px;
+    border:1px dashed rgba(10,42,77,0.35);
+    border-radius:5px;
+    pointer-events:none;
+  }
+  .swap-btn{
+    width:42px;height:42px;border-radius:50%;
+    border:1.5px solid var(--blue-deep);
+    background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:transform .3s ease, background .2s ease;
+  }
+  .swap-btn:active{transform:rotate(180deg);}
+  .swap-btn svg{width:19px;height:19px;stroke:var(--blue-deep);}
+
+  /* ---- Text panel ---- */
+  textarea{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--paper);
+    padding:16px;
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    color:var(--ink);
+    line-height:1.5;
+  }
+  textarea:focus{outline:2px solid var(--blue);outline-offset:1px;}
+
+  .primary-btn{
+    width:100%;
+    margin-top:14px;
+    padding:15px 0;
+    border:none;
+    border-radius:14px;
+    background:var(--blue);
+    color:#fff;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    cursor:pointer;
+    transition:background .18s ease, opacity .18s ease;
+  }
+  .primary-btn:active{background:var(--blue-deep);}
+  .primary-btn:disabled{opacity:0.55;cursor:default;}
+
+  .result-card{
+    margin-top:18px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    min-height:56px;
+    position:relative;
+  }
+  .result-card .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+    display:block;
+  }
+  .result-text{font-size:17px;line-height:1.5;color:var(--ink);word-wrap:break-word;}
+  .copy-btn{
+    position:absolute;top:14px;right:14px;
+    background:none;border:none;color:var(--blue);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:0.06em;cursor:pointer;padding:4px;
+  }
+  .placeholder-text{color:var(--ink-soft);font-style:italic;font-size:15px;}
+  .error-text{color:var(--err);font-size:14px;}
+
+  /* ---- Camera panel ---- */
+  body.camera-mode .topbar,
+  body.camera-mode .segmented,
+  body.camera-mode .footnote{display:none;}
+  body.camera-mode .app{padding-top:12px;}
+
+  .viewfinder{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/4;
+    background:var(--blue-deep);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  body.camera-mode .viewfinder{aspect-ratio:4/5;}
+  .viewfinder video{
+    width:100%;height:100%;object-fit:cover;display:block;
+  }
+  .viewfinder canvas{display:none;}
+  .corner{
+    position:absolute;width:22px;height:22px;
+    border-color:rgba(226,168,59,0.8);
+    border-style:solid;
+    pointer-events:none;
+  }
+  .corner.tl{top:56px;left:12px;border-width:2.5px 0 0 2.5px;border-top-left-radius:6px;}
+  .corner.tr{top:56px;right:12px;border-width:2.5px 2.5px 0 0;border-top-right-radius:6px;}
+  .corner.bl{bottom:56px;left:12px;border-width:0 0 2.5px 2.5px;border-bottom-left-radius:6px;}
+  .corner.br{bottom:56px;right:12px;border-width:0 2.5px 2.5px 0;border-bottom-right-radius:6px;}
+  .cam-placeholder{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;color:#EAF0F8;text-align:center;padding:24px;
+    z-index:1;
+  }
+  .cam-placeholder svg{width:38px;height:38px;stroke:#EAF0F8;opacity:0.8;}
+  .cam-placeholder p{font-size:13px;color:#C7D4E4;max-width:240px;margin:0;}
+  .cam-enable-btn{
+    margin-top:6px;padding:10px 20px;border-radius:10px;border:1px solid #EAF0F8;
+    background:transparent;color:#EAF0F8;font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.06em;cursor:pointer;
+  }
+
+  /* overlay controls sit on top of the video itself — no extra vertical space */
+  .cam-overlay-top{
+    position:absolute;top:0;left:0;right:0;z-index:2;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 12px 26px;
+    background:linear-gradient(to bottom, rgba(10,42,77,0.6), transparent);
+  }
+  .mini-tabs{
+    display:flex;gap:4px;background:rgba(255,255,255,0.16);
+    padding:4px;border-radius:11px;backdrop-filter:blur(6px);
+  }
+  .mini-tab{
+    width:32px;height:32px;border:none;border-radius:8px;background:transparent;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .mini-tab svg{width:16px;height:16px;stroke:#fff;opacity:0.8;}
+  .mini-tab.active{background:#fff;}
+  .mini-tab.active svg{stroke:var(--blue-deep);opacity:1;}
+
+  .mini-dir-toggle{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;
+    padding:9px 13px;border-radius:20px;border:1px solid rgba(255,255,255,0.55);
+    background:rgba(255,255,255,0.16);color:#fff;backdrop-filter:blur(6px);cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .cam-overlay-bottom{
+    position:absolute;bottom:0;left:0;right:0;z-index:2;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:26px 12px 14px;
+    background:linear-gradient(to top, rgba(10,42,77,0.6), transparent);
+  }
+  .status-pill{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.05em;
+    color:#fff;background:rgba(20,23,28,0.4);padding:8px 14px;border-radius:20px;
+    backdrop-filter:blur(6px);
+  }
+  .status-pill.busy::before{
+    content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--gold);margin-right:6px;vertical-align:middle;
+    animation:pulse 1s ease-in-out infinite;
+  }
+  .mini-pause{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;
+    border:1px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.16);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);
+  }
+  .mini-pause svg{width:14px;height:14px;fill:#fff;}
+  .mini-pause.paused{background:var(--gold);border-color:var(--gold);}
+
+  .cam-result-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .cam-result-original{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);
+    margin-bottom:6px;letter-spacing:0.02em;
+  }
+  .cam-result-translated{
+    font-size:18px;font-weight:500;color:var(--ink);line-height:1.4;word-wrap:break-word;
+  }
+
+  .status-line{
+    text-align:center;font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.06em;color:var(--ink-soft);
+    margin-bottom:14px;min-height:16px;
+  }
+  .status-line.busy::before{
+    content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+    background:var(--gold);margin-right:7px;vertical-align:middle;
+    animation:pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:0.3;}50%{opacity:1;}}
+
+  .cam-dir-row{
+    display:flex;gap:8px;justify-content:center;margin-bottom:14px;
+  }
+  .cam-dir-row button{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.04em;
+    padding:8px 14px;border-radius:20px;border:1.5px solid var(--line);
+    background:var(--paper);color:var(--ink-soft);cursor:pointer;
+  }
+  .cam-dir-row button.active{
+    border-color:var(--blue-deep);color:var(--blue-deep);background:#EAF1FA;
+  }
+
+  .mic-stage{display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 22px;}
+  .mic-btn{
+    width:88px;height:88px;border-radius:50%;
+    background:var(--blue-deep);
+    border:none;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 14px rgba(10,42,77,0.25);
+    transition:background .2s ease, transform .12s ease;
+    position:relative;
+  }
+  .mic-btn:active{transform:scale(0.94);}
+  .mic-btn svg{width:32px;height:32px;stroke:#fff;fill:none;}
+  .mic-btn.listening{background:var(--err);}
+  .mic-btn.listening::before{
+    content:"";
+    position:absolute;inset:-8px;
+    border-radius:50%;
+    border:2px solid var(--err);
+    animation:mic-pulse 1.4s ease-out infinite;
+  }
+  @keyframes mic-pulse{
+    0%{transform:scale(0.9);opacity:0.7;}
+    100%{transform:scale(1.35);opacity:0;}
+  }
+  .transcript-feed{
+    display:flex;flex-direction:column;gap:10px;
+    max-height:420px;overflow-y:auto;
+    padding-right:2px;
+  }
+  .feed-empty{
+    text-align:center;color:var(--ink-soft);font-size:13.5px;
+    padding:30px 10px;font-style:italic;
+  }
+  .feed-entry{
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:14px;padding:13px 15px;
+    animation:fade .25s ease;
+  }
+  .feed-original{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;color:var(--ink-soft);
+    margin-bottom:6px;letter-spacing:0.02em;
+  }
+  .feed-translated{
+    font-size:16px;color:var(--ink);line-height:1.45;
+  }
+
+  .footnote{
+    text-align:center;color:var(--ink-soft);font-size:11.5px;
+    margin-top:28px;line-height:1.6;
+  }
+  .footnote b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div>
+      <span class="brand-mark">Tõlk</span>
+      <span class="brand-sub">EN · ET field translator</span>
+    </div>
+    <div class="flag-chip"></div>
+  </div>
+
+  <div class="segmented">
+    <button id="tab-text" class="active" onclick="setMode('text')">Text</button>
+    <button id="tab-camera" onclick="setMode('camera')">Camera</button>
+    <button id="tab-listen" onclick="setMode('listen')">Listen</button>
+  </div>
+
+  <!-- TEXT PANEL -->
+  <div id="panel-text" class="panel active">
+    <div class="lang-row">
+      <div class="lang-chip" id="lang-from">ENGLISH</div>
+      <div class="swap-btn" onclick="swapText()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+      </div>
+      <div class="lang-chip" id="lang-to">EESTI</div>
+    </div>
+
+    <textarea id="text-input" placeholder="Type text to translate…"></textarea>
+
+    <button class="primary-btn" id="translate-btn" onclick="translateText()">Translate</button>
+
+    <div class="result-card">
+      <span class="label" id="result-label">Translation</span>
+      <button class="copy-btn" id="copy-btn" style="display:none" onclick="copyResult()">Copy</button>
+      <div class="result-text placeholder-text" id="text-result">Your translation will appear here.</div>
+    </div>
+  </div>
+
+  <!-- CAMERA PANEL -->
+  <div id="panel-camera" class="panel">
+    <div class="viewfinder">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <canvas id="diff-canvas" style="display:none"></canvas>
+
+      <div class="cam-overlay-top">
+        <div class="mini-tabs">
+          <button class="mini-tab" onclick="setMode('text')" title="Text">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </button>
+          <button class="mini-tab active" onclick="setMode('camera')" title="Camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-1.5h7l1 1.5H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          </button>
+          <button class="mini-tab" onclick="setMode('listen')" title="Listen">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/></svg>
+          </button>
+        </div>
+        <button class="mini-dir-toggle" id="cam-dir-toggle" onclick="toggleCamDirection()">ET → EN</button>
+      </div>
+
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+
+      <div class="cam-overlay-bottom">
+        <span class="status-pill" id="cam-status">Point at text to translate</span>
+        <button class="mini-pause" id="scan-toggle-btn" onclick="toggleAutoScan()" title="Pause scanning">
+          <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+      </div>
+
+      <div class="cam-placeholder" id="cam-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1.5l1-1.5h7l1 1.5H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <p>Point your camera at text and hold steady — it'll read and translate automatically.</p>
+        <button class="cam-enable-btn" onclick="startCamera()">Enable camera</button>
+      </div>
+    </div>
+
+    <div class="cam-result-card">
+      <div class="cam-result-original placeholder-text" id="cam-source">Nothing scanned yet.</div>
+      <div class="cam-result-translated placeholder-text" id="cam-result">—</div>
+    </div>
+  </div>
+
+  <!-- LISTEN PANEL -->
+  <div id="panel-listen" class="panel">
+    <div class="cam-dir-row">
+      <button id="listen-dir-et" class="active" onclick="setListenDirection('et-en')">Estonian → English</button>
+      <button id="listen-dir-en" onclick="setListenDirection('en-et')">English → Estonian</button>
+    </div>
+
+    <div class="mic-stage">
+      <button class="mic-btn" id="mic-btn" onclick="toggleListening()">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/></svg>
+      </button>
+      <div class="status-line" id="listen-status">Tap to start listening</div>
+    </div>
+
+    <div class="transcript-feed" id="transcript-feed">
+      <div class="feed-empty" id="feed-empty">The conversation will appear here, translated, as people speak.</div>
+    </div>
+  </div>
+
+  <p class="footnote">Tip: tap <b>Share → Add to Home Screen</b> to keep Tõlk one tap away.<br>Free translation via MyMemory · on-device text recognition via Tesseract.js</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<script>
+  // ---------- shared ----------
+  const LANG_NAMES = { en: 'ENGLISH', et: 'EESTI' };
+  let textDirection = 'en-et'; // 'en-et' or 'et-en'
+  let camDirection = 'et-en';
+
+  function setMode(mode){
+    ['text','camera','listen'].forEach(m=>{
+      document.getElementById('tab-'+m)?.classList.toggle('active', m===mode);
+      document.getElementById('panel-'+m).classList.toggle('active', m===mode);
+    });
+    document.querySelectorAll('.mini-tab').forEach(btn=>{
+      btn.classList.toggle('active', btn.title.toLowerCase() === mode);
+    });
+    document.body.classList.toggle('camera-mode', mode === 'camera');
+    if(mode !== 'listen' && recognizing) stopListening();
+    if(mode !== 'camera' && stream) stopCameraStream();
+  }
+
+  async function callMyMemory(text, from, to){
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Network error');
+    const data = await res.json();
+    if(!data.responseData || !data.responseData.translatedText){
+      throw new Error('No translation returned');
+    }
+    return data.responseData.translatedText;
+  }
+
+  // ---------- text tab ----------
+  function updateLangChips(){
+    const [from, to] = textDirection.split('-');
+    document.getElementById('lang-from').textContent = LANG_NAMES[from];
+    document.getElementById('lang-to').textContent = LANG_NAMES[to];
+  }
+  function swapText(){
+    textDirection = textDirection === 'en-et' ? 'et-en' : 'en-et';
+    updateLangChips();
+    const input = document.getElementById('text-input');
+    const resultEl = document.getElementById('text-result');
+    const currentResult = resultEl.classList.contains('placeholder-text') ? '' : resultEl.textContent;
+    if(currentResult){
+      input.value = currentResult;
+    }
+    resetTextResult();
+  }
+  function resetTextResult(){
+    const resultEl = document.getElementById('text-result');
+    resultEl.textContent = 'Your translation will appear here.';
+    resultEl.classList.add('placeholder-text');
+    resultEl.classList.remove('error-text');
+    document.getElementById('copy-btn').style.display = 'none';
+  }
+  async function translateText(){
+    const input = document.getElementById('text-input').value.trim();
+    const btn = document.getElementById('translate-btn');
+    const resultEl = document.getElementById('text-result');
+    if(!input){
+      resultEl.textContent = 'Type something first.';
+      resultEl.classList.add('placeholder-text');
+      return;
+    }
+    const [from, to] = textDirection.split('-');
+    btn.disabled = true;
+    btn.textContent = 'Translating…';
+    resultEl.classList.remove('placeholder-text','error-text');
+    resultEl.textContent = '…';
+    try{
+      const translated = await callMyMemory(input, from, to);
+      resultEl.textContent = translated;
+      document.getElementById('copy-btn').style.display = 'block';
+    }catch(err){
+      resultEl.textContent = 'Could not translate — check your connection and try again.';
+      resultEl.classList.add('error-text');
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Translate';
+    }
+  }
+  function copyResult(){
+    const text = document.getElementById('text-result').textContent;
+    navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied';
+    setTimeout(()=>btn.textContent='Copy', 1200);
+  }
+
+  // ---------- camera tab (auto-scan) ----------
+  let stream = null;
+  const SCAN_W = 32, SCAN_H = 24;
+  const STABLE_NEEDED = 3;      // consecutive stable checks before scanning
+  const MIN_SCAN_GAP = 1800;    // ms between OCR scans
+  const DIFF_THRESHOLD = 8;     // lower = more sensitive to motion
+  let diffCtx = null;
+  let prevFrameData = null;
+  let stableCount = 0;
+  let lastScanTime = 0;
+  let autoScanTimer = null;
+  let autoScanPaused = false;
+  let scanning = false;
+  let lastRecognizedText = '';
+
+  function toggleCamDirection(){
+    camDirection = camDirection === 'et-en' ? 'en-et' : 'et-en';
+    document.getElementById('cam-dir-toggle').textContent = camDirection === 'et-en' ? 'ET → EN' : 'EN → ET';
+    lastRecognizedText = ''; // force a fresh read under the new direction
+  }
+
+  async function startCamera(){
+    const statusEl = document.getElementById('cam-status');
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+      document.getElementById('cam-placeholder').style.display = 'none';
+      startAutoScan();
+    }catch(err){
+      statusEl.textContent = 'Camera access denied or unavailable.';
+    }
+  }
+
+  function stopCameraStream(){
+    stopAutoScan();
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    const video = document.getElementById('video');
+    video.srcObject = null;
+    document.getElementById('cam-placeholder').style.display = 'flex';
+  }
+
+  function startAutoScan(){
+    const diffCanvas = document.getElementById('diff-canvas');
+    diffCanvas.width = SCAN_W;
+    diffCanvas.height = SCAN_H;
+    diffCtx = diffCanvas.getContext('2d', { willReadFrequently: true });
+    prevFrameData = null;
+    stableCount = 0;
+    autoScanPaused = false;
+    if(autoScanTimer) clearInterval(autoScanTimer);
+    autoScanTimer = setInterval(checkFrameStability, 400);
+    setCamStatus('Point at text to translate');
+  }
+
+  function stopAutoScan(){
+    if(autoScanTimer){ clearInterval(autoScanTimer); autoScanTimer = null; }
+  }
+
+  function toggleAutoScan(){
+    autoScanPaused = !autoScanPaused;
+    document.getElementById('scan-toggle-btn').classList.toggle('paused', autoScanPaused);
+    setCamStatus(autoScanPaused ? 'Paused' : 'Watching…');
+  }
+
+  function checkFrameStability(){
+    if(autoScanPaused || scanning) return;
+    const video = document.getElementById('video');
+    if(!video.videoWidth) return;
+
+    diffCtx.drawImage(video, 0, 0, SCAN_W, SCAN_H);
+    const frame = diffCtx.getImageData(0, 0, SCAN_W, SCAN_H).data;
+
+    if(prevFrameData){
+      let diffSum = 0;
+      for(let i = 0; i < frame.length; i += 4){
+        diffSum += Math.abs(frame[i] - prevFrameData[i]);
+      }
+      const avgDiff = diffSum / (SCAN_W * SCAN_H);
+      if(avgDiff < DIFF_THRESHOLD){
+        stableCount++;
+      }else{
+        stableCount = 0;
+        if(!scanning) setCamStatus('Hold steady…');
+      }
+    }
+    prevFrameData = frame;
+
+    const now = Date.now();
+    if(stableCount >= STABLE_NEEDED && (now - lastScanTime) > MIN_SCAN_GAP){
+      stableCount = 0;
+      lastScanTime = now;
+      runAutoScan();
+    }
+  }
+
+  async function runAutoScan(){
+    scanning = true;
+    setCamStatus('Reading…', true);
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const sourceEl = document.getElementById('cam-source');
+    const resultEl = document.getElementById('cam-result');
+    const [from, to] = camDirection.split('-');
+    const ocrLang = from === 'et' ? 'est' : 'eng';
+
+    try{
+      const { data } = await Tesseract.recognize(canvas, ocrLang);
+      const recognized = (data.text || '').trim();
+
+      if(!recognized){
+        setCamStatus('Watching…');
+        scanning = false;
+        return;
+      }
+      if(recognized === lastRecognizedText){
+        setCamStatus('Watching…');
+        scanning = false;
+        return;
+      }
+      lastRecognizedText = recognized;
+      sourceEl.textContent = recognized;
+      sourceEl.classList.remove('placeholder-text', 'error-text');
+
+      setCamStatus('Translating…', true);
+      const translated = await callMyMemory(recognized, from, to);
+      resultEl.textContent = translated;
+      resultEl.classList.remove('placeholder-text', 'error-text');
+      setCamStatus('Watching…');
+    }catch(err){
+      setCamStatus('Trouble reading — hold steady and try again');
+      resultEl.classList.add('error-text');
+    }finally{
+      scanning = false;
+    }
+  }
+
+  function setCamStatus(text, busy){
+    const el = document.getElementById('cam-status');
+    el.textContent = text;
+    el.classList.toggle('busy', !!busy);
+  }
+
+  updateLangChips();
+
+  // ---------- listen tab ----------
+  let recognition = null;
+  let recognizing = false;
+  let listenDirection = 'et-en';
+  let usingWhisper = false;
+
+  // Whisper (in-browser, for Estonian — Safari's native dictation doesn't support it)
+  let whisperTranscriber = null;
+  let whisperLoading = false;
+  let micStream = null;
+  let mediaRecorder = null;
+  let whisperListening = false;
+  const CHUNK_MS = 5000;
+
+  function setListenDirection(dir){
+    if(recognizing) stopListening();
+    listenDirection = dir;
+    document.getElementById('listen-dir-et').classList.toggle('active', dir==='et-en');
+    document.getElementById('listen-dir-en').classList.toggle('active', dir==='en-et');
+    updateListenHint();
+  }
+
+  function updateListenHint(){
+    if(recognizing) return;
+    const [from] = listenDirection.split('-');
+    const statusEl = document.getElementById('listen-status');
+    if(from === 'et' && !whisperTranscriber){
+      statusEl.textContent = 'Tap to start — first time downloads a small offline speech model (~100MB)';
+    }else{
+      statusEl.textContent = 'Tap to start listening';
+    }
+  }
+
+  function toggleListening(){
+    if(recognizing){ stopListening(); return; }
+    const [from] = listenDirection.split('-');
+    if(from === 'et'){ startWhisperListening(); }else{ startNativeListening(); }
+  }
+
+  function stopListening(){
+    if(usingWhisper){ stopWhisperListening(); }else{ stopNativeListening(); }
+  }
+
+  // ---- native engine (English) ----
+  function startNativeListening(){
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const statusEl = document.getElementById('listen-status');
+    const micBtn = document.getElementById('mic-btn');
+
+    if(!SpeechRecognitionCtor){
+      statusEl.textContent = "Speech recognition isn't supported in this browser.";
+      return;
+    }
+
+    usingWhisper = false;
+    recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      recognizing = true;
+      micBtn.classList.add('listening');
+      statusEl.textContent = 'Listening…';
+    };
+
+    recognition.onerror = (e) => {
+      if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        statusEl.textContent = 'Microphone access was denied.';
+        recognizing = false;
+        micBtn.classList.remove('listening');
+      }else if(e.error === 'no-speech' || e.error === 'aborted'){
+        // silent gap — will auto-restart via onend
+      }else{
+        statusEl.textContent = 'Listening stopped — tap to try again.';
+      }
+    };
+
+    recognition.onresult = (event) => {
+      for(let i = event.resultIndex; i < event.results.length; i++){
+        const result = event.results[i];
+        if(result.isFinal){
+          const text = result[0].transcript.trim();
+          if(text) handleFinalTranscript(text);
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      if(recognizing){
+        try{ recognition.start(); }catch(err){ /* already starting */ }
+      }else{
+        micBtn.classList.remove('listening');
+        updateListenHint();
+      }
+    };
+
+    try{
+      recognition.start();
+    }catch(err){
+      statusEl.textContent = 'Could not start listening.';
+    }
+  }
+
+  function stopNativeListening(){
+    recognizing = false;
+    if(recognition){
+      recognition.onend = null;
+      recognition.onerror = null;
+      recognition.stop();
+    }
+    document.getElementById('mic-btn').classList.remove('listening');
+    updateListenHint();
+  }
+
+  // ---- Whisper engine (Estonian) ----
+  async function ensureWhisperLoaded(){
+    if(whisperTranscriber) return whisperTranscriber;
+    const statusEl = document.getElementById('listen-status');
+    const progressByFile = {};
+    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0');
+    whisperTranscriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
+      progress_callback: (data) => {
+        if(data.status === 'progress' && data.total){
+          progressByFile[data.file] = data.loaded / data.total;
+          const vals = Object.values(progressByFile);
+          const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+          statusEl.textContent = `Downloading Estonian speech model… ${Math.round(avg*100)}%`;
+        }
+      }
+    });
+    return whisperTranscriber;
+  }
+
+  async function startWhisperListening(){
+    const statusEl = document.getElementById('listen-status');
+    const micBtn = document.getElementById('mic-btn');
+    usingWhisper = true;
+
+    try{
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }catch(err){
+      statusEl.textContent = 'Microphone access was denied.';
+      return;
+    }
+
+    recognizing = true;
+    whisperListening = true;
+    micBtn.classList.add('listening');
+
+    if(!whisperTranscriber && !whisperLoading){
+      whisperLoading = true;
+      try{
+        await ensureWhisperLoaded();
+      }catch(err){
+        statusEl.textContent = "Couldn't load the speech model — check your connection.";
+        whisperLoading = false;
+        stopWhisperListening();
+        return;
+      }
+      whisperLoading = false;
+    }
+
+    statusEl.textContent = 'Listening…';
+    recordNextChunk();
+  }
+
+  function recordNextChunk(){
+    if(!whisperListening || !micStream) return;
+    const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4'
+                    : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+                    : '';
+    mediaRecorder = mimeType ? new MediaRecorder(micStream, { mimeType }) : new MediaRecorder(micStream);
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) chunks.push(e.data); };
+
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      if(whisperListening) document.getElementById('listen-status').textContent = 'Reading…';
+      await transcribeWhisperChunk(blob);
+      if(whisperListening){
+        document.getElementById('listen-status').textContent = 'Listening…';
+        recordNextChunk();
+      }
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => {
+      if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }, CHUNK_MS);
+  }
+
+  async function transcribeWhisperChunk(blob){
+    if(blob.size < 1000) return; // too short to bother with
+    try{
+      const transcriber = await ensureWhisperLoaded();
+      const output = await transcriber(blob, { language: 'estonian', task: 'transcribe' });
+      const text = (output.text || '').replace(/\[[^\]]*\]/g, '').trim();
+      if(text) handleFinalTranscript(text);
+    }catch(err){
+      // skip a bad chunk rather than interrupting the session
+    }
+  }
+
+  function stopWhisperListening(){
+    recognizing = false;
+    whisperListening = false;
+    if(mediaRecorder && mediaRecorder.state === 'recording'){
+      try{ mediaRecorder.stop(); }catch(err){}
+    }
+    if(micStream){
+      micStream.getTracks().forEach(t => t.stop());
+      micStream = null;
+    }
+    document.getElementById('mic-btn').classList.remove('listening');
+    updateListenHint();
+  }
+
+  async function handleFinalTranscript(text){
+    const [from, to] = listenDirection.split('-');
+    const feed = document.getElementById('transcript-feed');
+    const emptyEl = document.getElementById('feed-empty');
+    if(emptyEl) emptyEl.style.display = 'none';
+
+    const entry = document.createElement('div');
+    entry.className = 'feed-entry';
+    const originalDiv = document.createElement('div');
+    originalDiv.className = 'feed-original';
+    originalDiv.textContent = text;
+    const translatedDiv = document.createElement('div');
+    translatedDiv.className = 'feed-translated';
+    translatedDiv.textContent = 'Translating…';
+    entry.appendChild(originalDiv);
+    entry.appendChild(translatedDiv);
+    feed.prepend(entry);
+
+    try{
+      const translated = await callMyMemory(text, from, to);
+      translatedDiv.textContent = translated;
+    }catch(err){
+      translatedDiv.textContent = 'Translation failed.';
+      translatedDiv.classList.add('error-text');
+    }
+  }
+
+  updateListenHint();
+</script>
+</body>
+</html>
